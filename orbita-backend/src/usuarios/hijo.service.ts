@@ -359,10 +359,12 @@ export class HijoService {
       throw new BadRequestException('No tienes tutores vinculados para recibir la alerta');
     }
 
+    const nombreCorto = hijo.nombre ? hijo.nombre : 'el menor';
+
     // Preparar mensaje de alerta con ubicación actual
     const mensajeAlerta = hijo.latitud && hijo.longitud
-      ? `🚨 ¡ALERTA SOS! ${hijo.nombre} ${hijo.apellido} necesita ayuda urgente.\n📍 Ubicación: ${hijo.latitud}, ${hijo.longitud}`
-      : `🚨 ¡ALERTA SOS! ${hijo.nombre} ${hijo.apellido} necesita ayuda urgente.\n⚠️ Ubicación no disponible`;
+      ? `🚨 ¡ALERTA SOS! ${nombreCorto} necesita ayuda urgente.\n📍 Ubicación: ${hijo.latitud}, ${hijo.longitud}`
+      : `🚨 ¡ALERTA SOS! ${nombreCorto} necesita ayuda urgente.\n⚠️ Ubicación no disponible`;
 
     let notificacionesEnviadas = 0;
 
@@ -379,7 +381,7 @@ export class HijoService {
         await this.notificationsService.sendPushNotification(
           tutor.id,
           '🚨 ALERTA SOS',
-          `${hijo.nombre} necesita ayuda urgente`,
+          `${nombreCorto} necesita ayuda urgente`,
           {
             type: 'sos_panico',  // IMPORTANTE: Este campo es el que detecta Flutter
             childId: hijo.id,

@@ -19,7 +19,13 @@ class AlertsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Row(
           children: [
-            const Text('Notificaciones', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF1A237E))),
+            const Expanded(
+              child: Text(
+                'Notificaciones',
+                style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF1A237E)),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             if (unreadCount > 0) ...[
               const SizedBox(width: 8),
               Container(

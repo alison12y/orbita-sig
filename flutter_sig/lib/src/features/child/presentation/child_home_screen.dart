@@ -463,8 +463,7 @@ class _ChildHomeScreenState extends ConsumerState<ChildHomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: const Text('Mi Perfil', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
+        title: const Text('Mi Perfil', style: TextStyle(fontWeight: FontWeight.w800)),
         backgroundColor: Colors.white,
         foregroundColor: AppColors.primary,
         elevation: 0,
@@ -480,7 +479,7 @@ class _ChildHomeScreenState extends ConsumerState<ChildHomeScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 120),
         child: Column(
           children: [
             _buildProfileCard((currentUser?.name.toLowerCase() == 'camila' ? 'Balu' : currentUser?.name) ?? 'Hijo'),
@@ -594,6 +593,8 @@ class _ChildHomeScreenState extends ConsumerState<ChildHomeScreen> {
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Container(
