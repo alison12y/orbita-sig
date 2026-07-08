@@ -40,7 +40,7 @@ import { UbicacionModule } from './ubicacion/ubicacion.module';
                 database: configService.get<string>('DB_DATABASE') || configService.get<string>('DB_NAME') || 'safesteps',
               }),
           entities: [User, Tutor, Hijo, Notification, ZonaSegura, Registro],
-          synchronize: configService.get('NODE_ENV') === 'development',
+          synchronize: true, // Habilitado para MVP en Render
           logging: configService.get('NODE_ENV') === 'development',
         } as TypeOrmModuleOptions;
       },
