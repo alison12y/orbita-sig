@@ -30,6 +30,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   final Set<String> _joinedChildRooms = {};
   final MapController _mapController = MapController();
   Child? _selectedChild;
+  ValueNotifier<Child>? _selectedChildNotifier;
   bool _showOfflineRoute = true;
   bool _showOnlineRoute = true;
   Map<String, List<Registro>> _locationHistory = {};
@@ -80,15 +81,25 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               final childIndex = children.indexWhere((c) => c.id == childId);
               if (childIndex != -1) {
                 final originalChild = children[childIndex];
-                final device = data['device'] as String? ?? 'Unknown';
+                final device = data['device'] as String? ?? 'Desconocido';
+                
+                DateTime timestamp = DateTime.now();
+                if (data['timestamp'] != null) {
+                   timestamp = DateTime.tryParse(data['timestamp']) ?? DateTime.now();
+                }
+
                 _liveChildren[childId] = originalChild.copyWith(
                   latitude: lat,
                   longitude: lng,
                   battery: (data['battery'] as num).toDouble(),
                   status: 'online', // Mark as online when receiving location
                   device: device,
-                  lastUpdated: DateTime.now(),
+                  lastUpdated: timestamp,
                 );
+                
+                if (_selectedChild?.id == childId && _selectedChildNotifier != null) {
+                  _selectedChildNotifier!.value = _liveChildren[childId]!;
+                }
               }
             });
           });
@@ -100,18 +111,27 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           setState(() {
             final childId = data['childId'].toString();
             final isOnline = data['online'] as bool;
-            final newDevice = data['device'] as String? ?? 'Unknown';
+            final newDevice = data['device'] as String? ?? 'Desconocido';
+            
+            DateTime timestamp = DateTime.now();
+            if (data['timestamp'] != null) {
+               timestamp = DateTime.tryParse(data['timestamp']) ?? DateTime.now();
+            }
             
             if (_liveChildren.containsKey(childId)) {
               final currentDevice = _liveChildren[childId]!.device;
-              // Only update device if new value is not Unknown, or current is Unknown
-              final deviceToUse = (newDevice != 'Unknown') ? newDevice : currentDevice;
+              // Only update device if new value is not Unknown/Desconocido, or current is Unknown/Desconocido
+              final deviceToUse = (newDevice != 'Desconocido' && newDevice != 'Unknown') ? newDevice : currentDevice;
               
               _liveChildren[childId] = _liveChildren[childId]!.copyWith(
                 status: isOnline ? 'online' : 'offline',
                 device: deviceToUse,
-                lastUpdated: DateTime.now(),
+                lastUpdated: timestamp,
               );
+              
+              if (_selectedChild?.id == childId && _selectedChildNotifier != null) {
+                _selectedChildNotifier!.value = _liveChildren[childId]!;
+              }
             } else {
               final childrenAsync = ref.read(childrenProvider);
               childrenAsync.whenData((children) {
@@ -119,9 +139,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 if (childIndex != -1) {
                   _liveChildren[childId] = children[childIndex].copyWith(
                     status: isOnline ? 'online' : 'offline',
-                    device: newDevice,
-                    lastUpdated: DateTime.now(),
+                    device: newDevice == 'Unknown' ? 'Desconocido' : newDevice,
+                    lastUpdated: timestamp,
                   );
+                  if (_selectedChild?.id == childId && _selectedChildNotifier != null) {
+                    _selectedChildNotifier!.value = _liveChildren[childId]!;
+                  }
                 }
               });
             }
@@ -217,9 +240,14 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   void _showChildInfoPopup(Child child) async {
     HapticFeedback.lightImpact();
+    
+    // Si ya existe en _liveChildren, usamos esa versión actualizada
+    final currentChildData = _liveChildren[child.id] ?? child;
+    _selectedChildNotifier = ValueNotifier<Child>(currentChildData);
+    
     setState(() {
-      _selectedChild = child;
-      _showRouteChildId = child.id; // Mantener rutas visibles
+      _selectedChild = currentChildData;
+      _showRouteChildId = currentChildData.id; // Mantener rutas visibles
       _isLoadingHistory = true;
     });
     
@@ -233,18 +261,22 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => _ChildInfoSheet(
-        child: child,
+        childNotifier: _selectedChildNotifier!,
         locationHistory: _locationHistory[child.id] ?? [],
         isLoadingHistory: _isLoadingHistory,
         onClose: () {
           Navigator.pop(context);
-          setState(() => _selectedChild = null);
+          setState(() {
+            _selectedChild = null;
+            _selectedChildNotifier = null;
+          });
           // Las rutas permanecen visibles (_showRouteChildId no se borra)
         },
         onCenterMap: () {
           Navigator.pop(context);
+          final c = _selectedChildNotifier!.value;
           _mapController.move(
-            LatLng(child.latitude, child.longitude),
+            LatLng(c.latitude, c.longitude),
             15.0,
           );
         },
@@ -257,7 +289,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         },
       ),
     ).whenComplete(() {
-      setState(() => _selectedChild = null);
+      if (mounted) {
+        setState(() {
+          _selectedChild = null;
+          _selectedChildNotifier = null;
+        });
+      }
       // Las rutas permanecen visibles
     });
   }
@@ -707,7 +744,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 }
 
 class _ChildInfoSheet extends StatelessWidget {
-  final Child child;
+  final ValueNotifier<Child> childNotifier;
   final VoidCallback onClose;
   final VoidCallback onCenterMap;
   final List<Registro> locationHistory;
@@ -715,7 +752,7 @@ class _ChildInfoSheet extends StatelessWidget {
   final void Function(Registro)? onCenterOnPoint;
 
   const _ChildInfoSheet({
-    required this.child,
+    required this.childNotifier,
     required this.onClose,
     required this.onCenterMap,
     this.locationHistory = const [],
@@ -725,25 +762,29 @@ class _ChildInfoSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isOnline = child.status == 'online';
-    
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+    return ValueListenableBuilder<Child>(
+      valueListenable: childNotifier,
+      builder: (context, child, childWidget) {
+        final isOnline = child.status == 'online';
+        
+        return Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
           // Handle bar
           Container(
             width: 40,
@@ -906,8 +947,12 @@ class _ChildInfoSheet extends StatelessWidget {
             isLoadingHistory: isLoadingHistory,
             onCenterOnPoint: onCenterOnPoint,
           ),
+          ),
         ],
       ),
+    ),
+    );
+    },
     );
   }
 

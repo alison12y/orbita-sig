@@ -79,8 +79,8 @@ export class ZonasSegurasService {
       .where('hijo.id = :hijoId', { hijoId })
       .andWhere(
         `ST_Contains(
-          zona.poligono, 
-          ST_SetSRID(ST_MakePoint(:longitud, :latitud), 4326)
+          zona.poligono::geometry, 
+          ST_SetSRID(ST_MakePoint(:longitud, :latitud), 4326)::geometry
         )`,
         { latitud, longitud }
       )

@@ -46,7 +46,7 @@ class _ChildHomeScreenState extends ConsumerState<ChildHomeScreen> {
   StreamSubscription<BatteryState>? _batterySubscription;
   
   // Device info
-  String _deviceName = 'Unknown';
+  String _deviceName = 'Desconocido';
 
   // Sync & Offline Support
   late SyncService _syncService;
@@ -153,7 +153,7 @@ class _ChildHomeScreenState extends ConsumerState<ChildHomeScreen> {
       print('📱 Device name: $_deviceName');
     } catch (e) {
       print('Error getting device info: $e');
-      _deviceName = 'Unknown';
+      _deviceName = 'Desconocido';
     }
   }
 
@@ -338,7 +338,7 @@ class _ChildHomeScreenState extends ConsumerState<ChildHomeScreen> {
 
       // El servicio de socket manejará esto internamente si aún está conectando
       socketService.joinChildRoom(childId);
-      socketService.emitChildOnline();
+      socketService.emitChildOnline(device: _deviceName);
 
       // Background service
       try {

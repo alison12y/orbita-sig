@@ -66,7 +66,7 @@ export class UbicacionGateway implements OnGatewayConnection, OnGatewayDisconnec
                 client.join(room);
                 
                 // Obtener device del handshake si está disponible
-                const device = client.handshake.query?.device as string || 'Unknown';
+                const device = client.handshake.query?.device as string || 'Desconocido';
                 client.data.device = device;
                 
                 console.log(`👶 Hijo ${payload.sub} unido automáticamente a sala ${room} (${device})`);
@@ -87,7 +87,7 @@ export class UbicacionGateway implements OnGatewayConnection, OnGatewayDisconnec
 
     handleDisconnect(client: Socket) {
         const user = client.data.user;
-        const device = client.data.device || 'Unknown';
+        const device = client.data.device || 'Desconocido';
         console.log(`🔌 Cliente desconectado: ${client.id}`);
         
         // Si era un hijo, notificar a los tutores que está offline
@@ -153,11 +153,11 @@ export class UbicacionGateway implements OnGatewayConnection, OnGatewayDisconnec
             lng: data.lng,
             battery: data.battery,
             status: data.status,
-            device: data.device || 'Unknown', // Dispositivo del hijo
+            device: data.device || 'Desconocido', // Dispositivo del hijo
             timestamp: new Date().toISOString(),
         });
         
-        console.log(`📍 Ubicación actualizada para hijo ${childId}: ${data.lat}, ${data.lng} (${data.device || 'Unknown'})`);
+        console.log(`📍 Ubicación actualizada para hijo ${childId}: ${data.lat}, ${data.lng} (${data.device || 'Desconocido'})`);
 
         // Persistir en base de datos
         try {
@@ -173,19 +173,23 @@ export class UbicacionGateway implements OnGatewayConnection, OnGatewayDisconnec
 
     // Método para que el hijo notifique que está activo
     @SubscribeMessage('childOnline')
-    handleChildOnline(@ConnectedSocket() client: Socket) {
+    handleChildOnline(@ConnectedSocket() client: Socket, @MessageBody() data?: { device?: string }) {
         const user = client.data.user;
         if (!user || user.tipo !== 'hijo') {
             return;
         }
 
+        const device = data?.device || client.data.device || 'Desconocido';
+        client.data.device = device;
+
         const room = `hijo_${user.sub}`;
         this.server.to(room).emit('childStatusChanged', {
             childId: user.sub,
             online: true,
+            device: device,
             timestamp: new Date().toISOString(),
         });
-        console.log(`Hijo ${user.sub} está en línea`);
+        console.log(`Hijo ${user.sub} está en línea (${device})`);
     }
 
     // Método para que el hijo notifique que se va offline (antes de desconectar)

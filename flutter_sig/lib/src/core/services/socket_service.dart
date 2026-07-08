@@ -113,7 +113,7 @@ class SocketService {
     double lng,
     double battery,
     String status, {
-    String device = 'Unknown',
+    String device = 'Desconocido',
   }) {
     if (_socket != null && _socket!.connected) {
       print('📤 Emitting updateLocation: $lat, $lng (device: $device)');
@@ -130,10 +130,10 @@ class SocketService {
   }
 
   // Method for child to notify they are online
-  void emitChildOnline() {
+  void emitChildOnline({String device = 'Desconocido'}) {
     if (_socket != null && _socket!.connected) {
       print('📤 Emitting childOnline');
-      _socket!.emit('childOnline', {});
+      _socket!.emit('childOnline', {'device': device});
     }
   }
 

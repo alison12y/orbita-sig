@@ -32,6 +32,9 @@ export class Hijo extends User {
   @Column({ type: 'int', nullable: true })
   zonaActualId: number;
 
+  @Column({ type: 'timestamp', nullable: true })
+  ultimaAlertaZona: Date;
+
   @ManyToMany(() => ZonaSegura, (zona) => zona.hijos)
   zonasSeguras: ZonaSegura[];
 

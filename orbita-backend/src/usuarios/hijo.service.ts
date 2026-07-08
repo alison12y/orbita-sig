@@ -167,67 +167,99 @@ export class HijoService {
 
     // 📍 Paso 6: Detectar cambios de estado y enviar notificaciones
     try {
+      const ahora = new Date();
+      const ultimaAlerta = hijo.ultimaAlertaZona;
+      const cincoMinutos = 5 * 60 * 1000;
+      
+      let actualizoAlerta = false;
+
       // 🟢 EVENTO: zone_entry (FUERA → DENTRO)
       if (estadoAnterior === 'FUERA' && estadoNuevo === 'DENTRO' && zonaNueva) {
-        console.log(`🟢 ZONE_ENTRY: ${hijo.nombre} entró a ${zonaNueva.nombre}`);
+        if (!ultimaAlerta || ahora.getTime() - ultimaAlerta.getTime() > cincoMinutos) {
+          console.log(`🟢 ZONE_ENTRY: ${hijo.nombre} entró a ${zonaNueva.nombre}`);
 
-        if (zonaNueva.tutor) {
-          const mensaje = `🟢 ${hijo.nombre} ${hijo.apellido} entró a la zona segura "${zonaNueva.nombre}"`;
-          
-          // Guardar en BD
-          await this.notificationsService.create(zonaNueva.tutor.id, {
-            mensaje,
-            tipo: 'zone_entry',
-          });
+          if (zonaNueva.tutor) {
+            const horaFormat = ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            const mensaje = `✅ ${hijo.nombre} entró a la zona segura "${zonaNueva.nombre}".\n⏰ Hora: ${horaFormat}\n📍 Coordenadas: ${hijo.latitud}, ${hijo.longitud}`;
+            
+            // Guardar en BD
+            await this.notificationsService.create(zonaNueva.tutor.id, {
+              mensaje,
+              tipo: 'zone_entry',
+            });
 
-          // 📱 Enviar Push FCM
-          await this.notificationsService.sendPushNotification(
-            zonaNueva.tutor.id,
-            '🟢 Zona Segura',
-            `${hijo.nombre} entró a ${zonaNueva.nombre}`,
-            {
-              type: 'zone_entry',
-              childId: hijo.id,
-              childName: `${hijo.nombre} ${hijo.apellido}`,
-              zonaId: zonaNueva.id,
-              zonaName: zonaNueva.nombre,
-            },
-          );
+            // 📱 Enviar Push FCM
+            await this.notificationsService.sendPushNotification(
+              zonaNueva.tutor.id,
+              '✅ Zonas Seguras',
+              `${hijo.nombre} entró a ${zonaNueva.nombre}`,
+              {
+                type: 'zone_entry',
+                childId: hijo.id,
+                childName: `${hijo.nombre} ${hijo.apellido}`,
+                zonaId: zonaNueva.id,
+                zonaName: zonaNueva.nombre,
+                latitud: hijo.latitud?.toString() || '',
+                longitud: hijo.longitud?.toString() || '',
+                tipo_alerta: 'ZONA_SEGURA',
+              },
+            );
+
+            hijo.ultimaAlertaZona = ahora;
+            actualizoAlerta = true;
+          }
+        } else {
+            console.log(`ℹ️ ZONE_ENTRY evitado por límite de tiempo de 5 minutos`);
         }
       }
 
       // 🔴 EVENTO: zone_exit (DENTRO → FUERA)
       if (estadoAnterior === 'DENTRO' && estadoNuevo === 'FUERA' && zonaAnteriorId) {
-        // Buscar info de la zona anterior
-        const zonaAnterior = await this.zonasService.findById(zonaAnteriorId);
-        
-        if (zonaAnterior) {
-          console.log(`🔴 ZONE_EXIT: ${hijo.nombre} salió de ${zonaAnterior.nombre}`);
+        if (!ultimaAlerta || ahora.getTime() - ultimaAlerta.getTime() > cincoMinutos) {
+          // Buscar info de la zona anterior
+          const zonaAnterior = await this.zonasService.findById(zonaAnteriorId);
+          
+          if (zonaAnterior) {
+            console.log(`🔴 ZONE_EXIT: ${hijo.nombre} salió de ${zonaAnterior.nombre}`);
 
-          if (zonaAnterior.tutor) {
-            const mensaje = `🔴 ${hijo.nombre} ${hijo.apellido} salió de la zona segura "${zonaAnterior.nombre}"`;
-            
-            // Guardar en BD
-            await this.notificationsService.create(zonaAnterior.tutor.id, {
-              mensaje,
-              tipo: 'zone_exit',
-            });
+            if (zonaAnterior.tutor) {
+              const horaFormat = ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+              const mensaje = `🚨 Alerta: ${hijo.nombre} se encuentra fuera del área segura "${zonaAnterior.nombre}".\n⏰ Hora: ${horaFormat}\n📍 Coordenadas: ${hijo.latitud}, ${hijo.longitud}`;
+              
+              // Guardar en BD
+              await this.notificationsService.create(zonaAnterior.tutor.id, {
+                mensaje,
+                tipo: 'zone_exit',
+              });
 
-            // 📱 Enviar Push FCM
-            await this.notificationsService.sendPushNotification(
-              zonaAnterior.tutor.id,
-              '🔴 Alerta de Zona',
-              `${hijo.nombre} salió de ${zonaAnterior.nombre}`,
-              {
-                type: 'zone_exit',
-                childId: hijo.id,
-                childName: `${hijo.nombre} ${hijo.apellido}`,
-                zonaId: zonaAnterior.id,
-                zonaName: zonaAnterior.nombre,
-              },
-            );
+              // 📱 Enviar Push FCM
+              await this.notificationsService.sendPushNotification(
+                zonaAnterior.tutor.id,
+                '🔴 Alerta: Fuera de zona segura',
+                `${hijo.nombre} salió de ${zonaAnterior.nombre}`,
+                {
+                  type: 'zone_exit',
+                  childId: hijo.id,
+                  childName: `${hijo.nombre} ${hijo.apellido}`,
+                  zonaId: zonaAnterior.id,
+                  zonaName: zonaAnterior.nombre,
+                  latitud: hijo.latitud?.toString() || '',
+                  longitud: hijo.longitud?.toString() || '',
+                  tipo_alerta: 'FUERA_DE_ZONA',
+                },
+              );
+
+              hijo.ultimaAlertaZona = ahora;
+              actualizoAlerta = true;
+            }
           }
+        } else {
+            console.log(`ℹ️ ZONE_EXIT evitado por límite de tiempo de 5 minutos`);
         }
+      }
+
+      if (actualizoAlerta) {
+          await this.hijoRepository.save(hijo);
       }
 
       // ℹ️ Log de estado (sin notificación)
