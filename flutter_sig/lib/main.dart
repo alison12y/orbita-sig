@@ -192,8 +192,10 @@ class _MyAppState extends ConsumerState<MyApp> {
                 Text(message.notification!.body ?? ''),
               ],
             ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 4),
+            backgroundColor: (notification.type == NotificationType.zoneExit || notification.type == NotificationType.alert)
+                ? Colors.red.shade600
+                : Colors.green,
+            duration: const Duration(seconds: 5),
             action: SnackBarAction(
               label: 'VER',
               textColor: Colors.white,

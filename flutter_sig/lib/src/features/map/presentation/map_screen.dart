@@ -238,6 +238,57 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     );
   }
 
+  Widget _buildSafeZonesLabelsLayer(AsyncValue<List<SafeZone>> safeZonesAsync) {
+    return safeZonesAsync.when(
+      data: (zones) => MarkerLayer(
+        markers: zones
+            .where((zone) => zone.points.isNotEmpty && zone.name.isNotEmpty)
+            .map((zone) => Marker(
+                  point: zone.center,
+                  width: 140,
+                  height: 36,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(zone.displayIcon, size: 14, color: zone.displayColor),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              zone.name,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: zone.displayColor,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ))
+            .toList(),
+      ),
+      loading: () => const MarkerLayer(markers: []),
+      error: (_, __) => const MarkerLayer(markers: []),
+    );
+  }
+
   void _showChildInfoPopup(Child child) async {
     HapticFeedback.lightImpact();
     
@@ -260,6 +311,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      useRootNavigator: true,
       builder: (context) => _ChildInfoSheet(
         childNotifier: _selectedChildNotifier!,
         locationHistory: _locationHistory[child.id] ?? [],
@@ -486,6 +538,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     userAgentPackageName: 'com.orbita.mobile',
                   ),
                   _buildSafeZonesLayer(safeZonesAsync),
+                  _buildSafeZonesLabelsLayer(safeZonesAsync),
                   
                   // Mostrar rutas del niño (persisten después de cerrar panel)
                   if (_showRouteChildId != null && _locationHistory.containsKey(_showRouteChildId!))
@@ -768,7 +821,7 @@ class _ChildInfoSheet extends StatelessWidget {
         final isOnline = child.status == 'online';
         
         return Container(
-          margin: const EdgeInsets.all(16),
+          margin: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 16),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
