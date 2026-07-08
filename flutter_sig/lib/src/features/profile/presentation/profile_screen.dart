@@ -175,6 +175,35 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                   ),
                   
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Configuración',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildSettingsOption(
+                    context,
+                    title: 'Notificaciones',
+                    icon: Icons.notifications_rounded,
+                    onTap: () => context.push('/settings-notifications'),
+                  ),
+                  _buildSettingsOption(
+                    context,
+                    title: 'Privacidad',
+                    icon: Icons.privacy_tip_rounded,
+                    onTap: () => context.push('/settings-privacy'),
+                  ),
+                  _buildSettingsOption(
+                    context,
+                    title: 'Historial',
+                    icon: Icons.history_rounded,
+                    onTap: () => context.push('/settings-history'),
+                  ),
+                  
                   // Espacio extra para el botón flotante
                   const SizedBox(height: 100),
                 ],
@@ -323,6 +352,57 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             onTap: () => context.push('/child-detail', extra: child),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildSettingsOption(BuildContext context, {required String title, required IconData icon, required VoidCallback onTap}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1A237E).withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: const Color(0xFF1A237E)),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

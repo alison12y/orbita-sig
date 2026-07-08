@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/services/socket_provider.dart';
 import '../../map/domain/entities/child.dart';
@@ -405,6 +406,31 @@ class _ChildDetailScreenState extends ConsumerState<ChildDetailScreen> {
                     Icons.battery_std,
                     'Batería',
                     '${_liveChild.battery.toStringAsFixed(0)}%',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                    Icons.location_on,
+                    'Última ubicación',
+                    _liveChild.latitude != 0.0 && _liveChild.longitude != 0.0
+                        ? '${_liveChild.latitude.toStringAsFixed(5)}, ${_liveChild.longitude.toStringAsFixed(5)}'
+                        : 'Sin ubicación registrada',
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.go('/map'),
+                      icon: const Icon(Icons.map),
+                      label: const Text('Ver en mapa'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF1A237E),
+                        side: const BorderSide(color: Color(0xFF1A237E)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),

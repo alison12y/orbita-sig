@@ -17,6 +17,9 @@ import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/domain/entities/app_user.dart';
 import 'features/profile/presentation/create_child_screen.dart';
 import 'features/profile/presentation/child_detail_screen.dart';
+import 'features/profile/presentation/settings_notifications_screen.dart';
+import 'features/profile/presentation/settings_privacy_screen.dart';
+import 'features/profile/presentation/settings_history_screen.dart';
 import 'features/child/presentation/child_home_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -98,6 +101,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final child = state.extra as Child;
           return ChildDetailScreen(child: child);
         },
+      ),
+      GoRoute(
+        path: '/settings-notifications',
+        builder: (context, state) => const SettingsNotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/settings-privacy',
+        builder: (context, state) => const SettingsPrivacyScreen(),
+      ),
+      GoRoute(
+        path: '/settings-history',
+        builder: (context, state) => const SettingsHistoryScreen(),
       ),
 
       // Main App Routes (Tutor)
