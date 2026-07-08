@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -19,11 +21,13 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _searchController = TextEditingController();
   final _mapController = MapController();
   
   final List<LatLng> _polygonPoints = [];
   final List<String> _selectedChildrenIds = [];
   bool _isLoading = false;
+  bool _isSearching = false;
   
   // Default center (Santa Cruz)
   final LatLng _initialCenter = const LatLng(-17.7833, -63.1821);
@@ -32,6 +36,7 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    _searchController.dispose();
     _mapController.dispose();
     super.dispose();
   }
@@ -54,6 +59,46 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
     setState(() {
       _polygonPoints.clear();
     });
+  }
+
+  Future<void> _searchLocation() async {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) return;
+
+    setState(() => _isSearching = true);
+    FocusScope.of(context).unfocus();
+
+    try {
+      final url = Uri.parse('https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(query)}&format=json&limit=1');
+      final response = await http.get(url, headers: {
+        'User-Agent': 'com.safesteps.orbita_mobile'
+      }).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        if (data.isNotEmpty) {
+          final lat = double.parse(data[0]['lat'].toString());
+          final lon = double.parse(data[0]['lon'].toString());
+          _mapController.move(LatLng(lat, lon), 16.0);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No se encontró la ubicación')),
+            );
+          }
+        }
+      } else {
+        throw Exception('Error en el servidor');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Necesitas conexión para buscar direcciones')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSearching = false);
+    }
   }
 
 
@@ -251,9 +296,53 @@ class _CreateZoneScreenState extends ConsumerState<CreateZoneScreen> {
                     ],
                   ),
                 ),
-                // Instrucción
+                // Buscador flotante
                 Positioned(
                   top: 16,
+                  left: 16,
+                  right: 16,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (_) => _searchLocation(),
+                      decoration: InputDecoration(
+                        hintText: 'Buscar lugar, colegio, kínder o dirección...',
+                        hintStyle: const TextStyle(fontSize: 14),
+                        prefixIcon: const Icon(Icons.search, color: Color(0xFF1A237E)),
+                        suffixIcon: _isSearching
+                            ? const Padding(
+                                padding: EdgeInsets.all(12.0),
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              )
+                            : IconButton(
+                                icon: const Icon(Icons.arrow_forward_ios, size: 16),
+                                onPressed: _searchLocation,
+                              ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                      ),
+                    ),
+                  ),
+                ),
+                // Instrucción
+                Positioned(
+                  top: 80,
                   left: 16,
                   right: 16,
                   child: Container(
