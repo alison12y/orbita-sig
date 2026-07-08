@@ -121,117 +121,140 @@ class ZonesScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
-                        leading: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: zone.displayColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(zone.displayIcon, color: zone.displayColor, size: 28),
-                        ),
-                        title: Text(
-                          zone.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                        subtitle: Column(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                const Icon(Icons.description, size: 14, color: Colors.grey),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    zone.description.isNotEmpty ? zone.description : 'Sin descripción',
-                                    style: const TextStyle(color: Colors.grey, fontSize: 14),
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: zone.displayColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(zone.displayIcon, color: zone.displayColor, size: 28),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    zone.name,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: zone.status == 'active' ? Colors.green.shade50 : Colors.grey.shade100,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
+                                  const SizedBox(height: 6),
+                                  Row(
                                     children: [
-                                      Icon(
-                                        Icons.circle,
-                                        size: 8,
-                                        color: zone.status == 'active' ? Colors.green.shade700 : Colors.grey,
-                                      ),
+                                      const Icon(Icons.description, size: 14, color: Colors.grey),
                                       const SizedBox(width: 4),
-                                      Text(
-                                        zone.status == 'active' ? 'Activa' : 'Inactiva',
-                                        style: TextStyle(
-                                          color: zone.status == 'active' ? Colors.green.shade700 : Colors.grey,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
+                                      Expanded(
+                                        child: Text(
+                                          zone.description.isNotEmpty ? zone.description : 'Sin descripción',
+                                          style: const TextStyle(color: Colors.grey, fontSize: 14),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ],
                                   ),
+                                  const SizedBox(height: 12),
+                                  Wrap(
+                                    spacing: 12,
+                                    runSpacing: 8,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: zone.status == 'active' ? Colors.green.shade50 : Colors.grey.shade100,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.circle,
+                                              size: 8,
+                                              color: zone.status == 'active' ? Colors.green.shade700 : Colors.grey,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              zone.status == 'active' ? 'Activa' : 'Inactiva',
+                                              style: TextStyle(
+                                                color: zone.status == 'active' ? Colors.green.shade700 : Colors.grey,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.polyline, size: 14, color: Colors.grey[600]),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${zone.points.length} puntos',
+                                            style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  constraints: const BoxConstraints(),
+                                  padding: const EdgeInsets.all(4),
+                                  icon: const Icon(Icons.edit, color: Colors.blue, size: 22),
+                                  onPressed: () {
+                                    context.push('/edit-zone', extra: zone);
+                                  },
                                 ),
-                                const SizedBox(width: 12),
-                                Icon(Icons.polyline, size: 14, color: Colors.grey[600]),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${zone.points.length} puntos',
-                                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                const SizedBox(height: 8),
+                                IconButton(
+                                  constraints: const BoxConstraints(),
+                                  padding: const EdgeInsets.all(4),
+                                  icon: const Icon(Icons.delete_outline, color: Colors.red, size: 22),
+                                  onPressed: () async {
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('Eliminar Zona Segura'),
+                                        content: Text('¿Estás seguro de eliminar "${zone.name}"?\n\nEsta acción no se puede deshacer.'),
+                                        actions: [
+                                          TextButton(
+                                            child: const Text('Cancelar'),
+                                            onPressed: () => Navigator.pop(context, false),
+                                          ),
+                                          ElevatedButton(
+                                            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                                            onPressed: () => Navigator.pop(context, true),
+                                            child: const Text('Eliminar'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    
+                                    if (confirm == true) {
+                                      await ref.read(safeZonesProvider.notifier).deleteSafeZone(zone.id);
+                                    }
+                                  },
                                 ),
                               ],
                             ),
                           ],
                         ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () {
-                                  context.push('/edit-zone', extra: zone);
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                onPressed: () async {
-                                  final confirm = await showDialog<bool>(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text('Eliminar Zona Segura'),
-                                      content: Text('¿Estás seguro de eliminar "${zone.name}"?\n\nEsta acción no se puede deshacer.'),
-                                      actions: [
-                                        TextButton(
-                                          child: const Text('Cancelar'),
-                                          onPressed: () => Navigator.pop(context, false),
-                                        ),
-                                        ElevatedButton(
-                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-                                          onPressed: () => Navigator.pop(context, true),
-                                          child: const Text('Eliminar'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                  
-                                  if (confirm == true) {
-                                    await ref.read(safeZonesProvider.notifier).deleteSafeZone(zone.id);
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
                       ),
                     );
                   },

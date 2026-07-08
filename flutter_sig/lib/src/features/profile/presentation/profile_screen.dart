@@ -200,29 +200,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   _buildSettingsOption(
                     context,
                     title: 'Historial',
+                    subtitle: 'Consultar ubicaciones y alertas anteriores',
                     icon: Icons.history_rounded,
                     onTap: () => context.push('/settings-history'),
                   ),
                   
-                  // Espacio extra para el botón flotante
-                  const SizedBox(height: 100),
+                  const SizedBox(height: 16),
+                  _AnimatedLogoutButton(
+                    onLogout: () async {
+                      await ref.read(authControllerProvider.notifier).logout();
+                    },
+                  ),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
           ),
         ],
-      ),
-      // Botón de Logout fijo en la parte inferior (arriba del navbar)
-      bottomSheet: Container(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 130), // 130px para estar arriba del navbar
-        decoration: const BoxDecoration(
-          color: Color(0xFFF5F7FA),
-        ),
-        child: _AnimatedLogoutButton(
-          onLogout: () async {
-            await ref.read(authControllerProvider.notifier).logout();
-          },
-        ),
       ),
     );
   }
@@ -356,7 +350,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildSettingsOption(BuildContext context, {required String title, required IconData icon, required VoidCallback onTap}) {
+  Widget _buildSettingsOption(BuildContext context, {required String title, String? subtitle, required IconData icon, required VoidCallback onTap}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -389,13 +383,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
