@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -33,16 +33,16 @@ import { UbicacionModule } from './ubicacion/ubicacion.module';
                 ssl: configService.get('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
               }
             : {
-                host: configService.get('DB_HOST'),
-                port: configService.get('DB_PORT'),
-                username: configService.get('DB_USERNAME'),
-                password: configService.get('DB_PASSWORD'),
-                database: configService.get('DB_NAME'),
+                host: configService.get<string>('DB_HOST', 'localhost'),
+                port: Number(configService.get<string>('DB_PORT', '5432')),
+                username: configService.get<string>('DB_USERNAME', 'postgres'),
+                password: configService.get<string>('DB_PASSWORD', '123'),
+                database: configService.get<string>('DB_DATABASE') || configService.get<string>('DB_NAME') || 'safesteps',
               }),
           entities: [User, Tutor, Hijo, Notification, ZonaSegura, Registro],
           synchronize: configService.get('NODE_ENV') === 'development',
           logging: configService.get('NODE_ENV') === 'development',
-        };
+        } as TypeOrmModuleOptions;
       },
       inject: [ConfigService],
     }),
