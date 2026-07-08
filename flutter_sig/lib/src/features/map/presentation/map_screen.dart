@@ -784,7 +784,7 @@ class _ChildInfoSheet extends StatelessWidget {
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
+              children: <Widget>[
           // Handle bar
           Container(
             width: 40,
@@ -947,12 +947,11 @@ class _ChildInfoSheet extends StatelessWidget {
             isLoadingHistory: isLoadingHistory,
             onCenterOnPoint: onCenterOnPoint,
           ),
-          ),
         ],
       ),
     ),
-    );
-    },
+        );
+      },
     );
   }
 
