@@ -14,6 +14,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
+    console.error('==== EXCEPTION FILTER CAUGHT ====');
+    console.error(exception);
+    if (exception instanceof Error) {
+      console.error(exception.stack);
+    }
+    console.error('=================================');
+
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | string[] = 'Error interno del servidor';
 

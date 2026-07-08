@@ -24,30 +24,30 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto) {
-    // Validar si el email ya existe
-    const existingUser = await this.userRepository.findOne({
-      where: { email: registerDto.email },
-    });
-
-    if (existingUser) {
-      throw new ConflictException('El email ya está registrado');
-    }
-
-    // Validar tipo
-    if (!registerDto.tipo || registerDto.tipo.trim() === '') {
-      throw new BadRequestException('El campo tipo es requerido');
-    }
-
-    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-    
-    const tutor = this.tutorRepository.create({
-      nombre: registerDto.nombre,
-      email: registerDto.email,
-      password: hashedPassword,
-      tipo: registerDto.tipo.trim(),
-    });
-
     try {
+      // Validar si el email ya existe
+      const existingUser = await this.userRepository.findOne({
+        where: { email: registerDto.email },
+      });
+
+      if (existingUser) {
+        throw new ConflictException('El email ya está registrado');
+      }
+
+      // Validar tipo
+      if (!registerDto.tipo || registerDto.tipo.trim() === '') {
+        throw new BadRequestException('El campo tipo es requerido');
+      }
+
+      const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+      
+      const tutor = this.tutorRepository.create({
+        nombre: registerDto.nombre,
+        email: registerDto.email,
+        password: hashedPassword,
+        tipo: registerDto.tipo.trim(),
+      });
+
       const savedTutor = await this.tutorRepository.save(tutor);
 
       const payload = { email: savedTutor.email, sub: savedTutor.id };
@@ -60,7 +60,18 @@ export class AuthService {
           tipo: savedTutor.tipo,
         },
       };
-    } catch (error) {
+    } catch (error: any) {
+      console.error('REGISTER DTO:', registerDto);
+      console.error('REGISTER ERROR:', error);
+      console.error('REGISTER ERROR MESSAGE:', error.message);
+      console.error('REGISTER ERROR DETAIL:', error.detail);
+      console.error('REGISTER ERROR CODE:', error.code);
+      console.error('REGISTER ERROR STACK:', error.stack);
+
+      if (error instanceof ConflictException || error instanceof BadRequestException) {
+        throw error;
+      }
+      
       if (error.code === '23505') {
         throw new ConflictException('El email ya está registrado');
       }
