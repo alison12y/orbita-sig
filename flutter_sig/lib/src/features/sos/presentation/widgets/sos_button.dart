@@ -50,7 +50,12 @@ class _SOSButtonState extends State<SOSButton>
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.red, size: 32),
             SizedBox(width: 12),
-            Text('¿Enviar Alerta SOS?'),
+            Expanded(
+              child: Text(
+                '¿Enviar Alerta SOS?',
+                softWrap: true,
+              ),
+            ),
           ],
         ),
         content: const Text(
